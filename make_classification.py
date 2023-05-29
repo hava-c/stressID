@@ -30,7 +30,7 @@ from sklearn.utils import shuffle
 
 
 # Compare several classification models over K repetition, using K group splits, grouped by subjects
-def make_nclassif(X, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, seed=0, verbose=True):
+def make_nclassif(X, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, verbose=True):
     # Dictionnary to store f1-score and accuracy
     df_res= pd.DataFrame({'n':[],'f1-score':[],'accuracy':[], 'classifier':[]})
     
@@ -47,15 +47,17 @@ def make_nclassif(X, y, n_splits=10, feature_selector=None, list_classifiers=Non
     
     # Defaut classifiers tested: Logistic regression, Random Forests, Adaboost
     if not list_classifiers :
-        list_classifiers = [LogisticRegression(max_iter=2000, random_state=seed),
-                            RandomForestClassifier(max_depth=5, random_state=seed),
-                            AdaBoostClassifier(n_estimators=100, random_state=seed)]
+        list_classifiers = [LogisticRegression(max_iter=2000),
+                            RandomForestClassifier(max_depth=5),
+                            AdaBoostClassifier(n_estimators=100)]
                        
             
     # Make n-group random splits grouped by subjects
     groups = [l.split('_')[0] for l in list(y.index)]
     
-    X_shuffled, y_shuffled, groups_shuffled = shuffle(X, y, groups, random_state=0)
+    #rstate = random.randint(0,100)
+    
+    X_shuffled, y_shuffled, groups_shuffled = shuffle(X, y, groups)
 
     group_kfold = GroupKFold(n_splits=n_splits)
     group_kfold.get_n_splits(X_shuffled, y_shuffled, groups_shuffled)
@@ -125,7 +127,7 @@ def avg_res(res):
        
     
 # Compare several models, on several datasets, over K repetition using K group splits grouped by subjects   
-def benchmark_nrep(list_datasets, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, seed=0, verbose = True):
+def benchmark_nrep(list_datasets, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, verbose = True):
     res = dict()
     
     
@@ -133,14 +135,16 @@ def benchmark_nrep(list_datasets, y, n_splits=10, feature_selector=None, list_cl
     groups = [l.split('_')[0] for l in list(y.index)]
     x = list_datasets[0][1]
     
-    X_shuffled, y_shuffled, groups_shuffled = shuffle(x, y, groups, random_state=0)
+    #rstate = random.randint(0,100)
+    
+    X_shuffled, y_shuffled, groups_shuffled = shuffle(x, y, groups)
 
     group_kfold = GroupKFold(n_splits=n_splits)
     group_kfold.get_n_splits(X_shuffled, y_shuffled, groups_shuffled)
     
     # Set pipeline steps
     if impute:
-        imputer = IterativeImputer(random_state=0)
+        imputer = IterativeImputer()
     else:
         imputer = None
         
@@ -212,12 +216,12 @@ def benchmark_nrep(list_datasets, y, n_splits=10, feature_selector=None, list_cl
 
 ##########################################################################################    
        
-def make_nclassif_random_splits(X, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, seed=0, verbose=True):
+def make_nclassif_random_splits(X, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, verbose=True):
     # Dictionnary to store f1-score and accuracy
     df_res= pd.DataFrame({'n':[],'f1-score':[],'accuracy':[], 'classifier':[]})
     
     if impute:
-        imputer = IterativeImputer(random_state=0)
+        imputer = IterativeImputer()
     else:
         imputer = None
         
@@ -229,13 +233,14 @@ def make_nclassif_random_splits(X, y, n_splits=10, feature_selector=None, list_c
     
     # Defaut classifiers tested: Logistic regression, Random Forests, Adaboost
     if not list_classifiers :
-        list_classifiers = [LogisticRegression(max_iter=2000, random_state=seed),
-                            RandomForestClassifier(max_depth=5, random_state=seed),
-                            AdaBoostClassifier(n_estimators=100, random_state=seed)]
+        list_classifiers = [LogisticRegression(max_iter=2000),
+                            RandomForestClassifier(max_depth=5),
+                            AdaBoostClassifier(n_estimators=100)]
                         
     # Make n random splits 
     for s in range(n_splits):
-        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+        rstate = random.randint(0,100)
+        x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2,random_state=rstate)
         
         if verbose:
             print('Split {0:2d}/{1:2d}'.format(s+1, n_splits))
@@ -281,3 +286,4 @@ def make_nclassif_random_splits(X, y, n_splits=10, feature_selector=None, list_c
                                     'classifier':model.__class__.__name__, 'time':toc-tic},ignore_index=True)
     
     return df_res
+
