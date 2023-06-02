@@ -33,6 +33,7 @@ from sklearn.utils import shuffle
 def make_nclassif(X, y, n_splits=10, feature_selector=None, list_classifiers=None, impute=True, scale=True, verbose=True):
     # Dictionnary to store f1-score and accuracy
     df_res= pd.DataFrame({'n':[],'f1-score':[],'accuracy':[], 'classifier':[]})
+    conf_matrices = []
     
     if impute:
         imputer = IterativeImputer(random_state=0)
@@ -108,11 +109,12 @@ def make_nclassif(X, y, n_splits=10, feature_selector=None, list_classifiers=Non
             
             # Retrieve accuracy and F1-score
             y_pred = clf.predict(x_test)
+            conf_matrices.append(confusion_matrix(y_test, y_pred))
             df_res = df_res.append({'n':int(s),'f1-score':f1_score(y_test, y_pred, average='weighted'),
                                     'accuracy':balanced_accuracy_score(y_test, y_pred), 
                                     'classifier':model.__class__.__name__, 'time':toc-tic},ignore_index=True)
     
-    return df_res
+    return df_res, conf_matrices
     
    
 ##########################################################################################  
